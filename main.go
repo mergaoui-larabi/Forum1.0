@@ -17,6 +17,10 @@ func main() {
 
 	http.HandleFunc("/", handlers.RootHandler)
 	http.HandleFunc("/static/", handlers.StaticHnadler)
+	http.HandleFunc("/css/", handlers.Css)
+	http.HandleFunc("/login.html", handlers.Login)
+	http.HandleFunc("/regist.html", handlers.Regist)
+
 	fmt.Println("Server running on http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
 }

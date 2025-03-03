@@ -22,3 +22,12 @@ func StaticHnadler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.ServeFile(w,r,url)
 }
+func Css(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/css/" {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	cssFile := "static/css/" + r.URL.Path[len("/css/"):]
+	http.ServeFile(w, r, cssFile)
+}
