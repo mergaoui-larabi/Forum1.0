@@ -1,26 +1,28 @@
 package main
 
 import (
-	// "database/sql"
 	"fmt"
+	"forum/database"
 	"forum/handlers"
+"forum/models"
+	"log"
 	"net/http"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// var db *sql.DB
-
 func main() {
-	// initDB()
-	// defer db.Close()
-
-	http.HandleFunc("/", handlers.RootHandler)
+	database.Initdb()
+	http.HandleFunc("/", handlers.ForumHandler)
+	http.HandleFunc("/login", handlers.Login)
+	http.HandleFunc("/regist", handlers.Regist)
+	http.HandleFunc("/like", models.LikeHandler)
+	http.HandleFunc("/unlike", models.UnlikeHandler)
+	http.HandleFunc("/comment", models.CommentHandler)
+	http.HandleFunc("/likes/count", models.LikesCountHandler)
+	http.HandleFunc("/comments", models.CommentsHandler)
 	http.HandleFunc("/static/", handlers.StaticHnadler)
-	http.HandleFunc("/css/", handlers.Css)
-	http.HandleFunc("/login.html", handlers.Login)
-	http.HandleFunc("/regist.html", handlers.Regist)
-
+	
 	fmt.Println("Server running on http://localhost:8080")
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
