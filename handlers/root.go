@@ -11,14 +11,12 @@ func ForumHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error loading template: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	data := struct {
-		LikesCount int
+	data := struct {	
 		IsLoggedIn bool
 	}{
-		LikesCount: 0,
 		IsLoggedIn:true,
 	}
-	if err := tmpl.Execute(w, data); err != nil {
+	if err := tmpl.ExecuteTemplate(w,"index.html", data); err != nil {
 		http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
