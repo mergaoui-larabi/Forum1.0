@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	_ "github.com/mattn/go-sqlite3"
+	database "forum/database"
 )
 
 // var db *sql.DB
@@ -14,6 +15,12 @@ import (
 func main() {
 	// initDB()
 	// defer db.Close()
+
+	db := database.CreateDatabse()
+	database.UserTable(db)
+	database.PostTable(db)
+	database.LikeAndDislikeTable(db)
+	database.CommentTable(db)
 
 	http.HandleFunc("/", handlers.RootHandler)
 	http.HandleFunc("/static/", handlers.StaticHnadler)
