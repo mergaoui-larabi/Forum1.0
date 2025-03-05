@@ -14,6 +14,7 @@ func checkIfLiked(userID, postID int) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	
 	return count > 0, nil
 }
 
