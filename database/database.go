@@ -45,6 +45,21 @@ func PostTable(db *sql.DB) {
 		log.Fatal(err)
 	}
 }
+func DislikeTable(db *sql.DB) {
+	query := `
+	CREATE TABLE IF NOT EXISTS dislikes (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		post_id INTEGER NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+		FOREIGN KEY(post_id) REFERENCES post(id) ON DELETE CASCADE
+	);`
+	_, err := db.Exec(query)
+	if err != nil {
+		log.Fatal("Error creating dislikes table:", err)
+	}
+}
 
 func LikeAndDislikeTable(db *sql.DB) {
 	query := `

@@ -8,27 +8,50 @@ import (
 	"forum/database"
 )
 
-func addLike(userID, postID int) error {
-	_, err := database.Db.Exec("INSERT INTO likes (user_id, post_id) VALUES (?, ?)", userID, postID)
-	return err
+func checkIfLiked(userID, postID int) (bool, error) {
+	var count int
+	err := database.Db.QueryRow("SELECT COUNT(*) FROM likes WHERE user_id = ? AND post_id = ?", userID, postID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
-func LikeHandler(w http.ResponseWriter, r *http.Request) {
+func ToggleLikeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	err := addLike(1, 1)
+
+	userID := 1
+	postID := 1
+
+	liked, err := checkIfLiked(userID, postID)
 	if err != nil {
-		http.Error(w, "Failed to like post", http.StatusInternalServerError)
+		http.Error(w, "Error checking like status", http.StatusInternalServerError)
 		return
 	}
-	w.Write([]byte("Post liked successfully"))
+
+	if liked {
+		_, err = database.Db.Exec("DELETE FROM likes WHERE user_id = ? AND post_id = ?", userID, postID)
+		if err != nil {
+			http.Error(w, "Failed to unlike post", http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte("Post unliked successfully"))
+	} else {
+		_, err = database.Db.Exec("INSERT INTO likes (user_id, post_id) VALUES (?, ?)", userID, postID)
+		if err != nil {
+			http.Error(w, "Failed to like post", http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte("Post liked successfully"))
+	}
 }
 
-func getLikesCount() int {
+func getLikesCount(postID int) int {
 	var count int
-	err := database.Db.QueryRow("SELECT COUNT(*) FROM likes").Scan(&count)
+	err := database.Db.QueryRow("SELECT COUNT(*) FROM likes WHERE post_id = ?", postID).Scan(&count)
 	if err != nil {
 		log.Printf("Error fetching likes count: %v", err)
 		return 0
@@ -37,24 +60,63 @@ func getLikesCount() int {
 }
 
 func LikesCountHandler(w http.ResponseWriter, r *http.Request) {
-	count := getLikesCount()
+	postID := 1
+	count := getLikesCount(postID)
 	json.NewEncoder(w).Encode(map[string]int{"count": count})
 }
-
-func removeLike(userID, postID int) error {
-	_, err := database.Db.Exec("DELETE FROM likes WHERE user_id = ? AND post_id = ?", userID, postID)
-	return err
+func checkIfDisliked(userID, postID int) (bool, error) {
+	var count int
+	err := database.Db.QueryRow("SELECT COUNT(*) FROM dislikes WHERE user_id = ? AND post_id = ?", userID, postID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
-func UnlikeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
+func ToggleDislikeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	err := removeLike(1, 1)
+
+	userID := 1
+	postID := 1 
+
+	disliked, err := checkIfDisliked(userID, postID)
 	if err != nil {
-		http.Error(w, "Failed to unlike post", http.StatusInternalServerError)
+		http.Error(w, "Error checking dislike status", http.StatusInternalServerError)
 		return
 	}
-	w.Write([]byte("Post unliked successfully"))
+
+	if disliked {
+		_, err = database.Db.Exec("DELETE FROM dislikes WHERE user_id = ? AND post_id = ?", userID, postID)
+		if err != nil {
+			http.Error(w, "Failed to remove dislike", http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte("Dislike removed successfully"))
+	} else {
+		_, err = database.Db.Exec("INSERT INTO dislikes (user_id, post_id) VALUES (?, ?)", userID, postID)
+		if err != nil {
+			http.Error(w, "Failed to add dislike", http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte("Dislike added successfully"))
+	}
+}
+
+func getDislikesCount(postID int) int {
+	var count int
+	err := database.Db.QueryRow("SELECT COUNT(*) FROM dislikes WHERE post_id = ?", postID).Scan(&count)
+	if err != nil {
+		log.Printf("Error fetching dislikes count: %v", err)
+		return 0
+	}
+	return count
+}
+
+func DislikesCountHandler(w http.ResponseWriter, r *http.Request) {
+	postID := 1
+	count := getDislikesCount(postID)
+	json.NewEncoder(w).Encode(map[string]int{"count": count})
 }
