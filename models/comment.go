@@ -2,9 +2,9 @@ package models
 
 import (
 	"encoding/json"
-	"fmt"
-	"forum/database"
 	"net/http"
+
+	"forum/database"
 )
 
 func addComment(userID, postID int, content string) error {
@@ -40,15 +40,16 @@ func CommentHandler(w http.ResponseWriter, r *http.Request) {
 		PostID  int    `json:"post_id"`
 		Content string `json:"content"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
-	if err := addComment(1, req.PostID, req.Content); err != nil {
+	err = addComment(1, req.PostID, req.Content)
+	if err != nil {
 		http.Error(w, "Failed to add comment", http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintln(w, "Comment added successfully!")
 }
 
 func CommentsHandler(w http.ResponseWriter, r *http.Request) {
