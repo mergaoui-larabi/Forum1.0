@@ -17,7 +17,7 @@ func main() {
 	database.UserTable(db)
 	database.PostTable(db)
 	database.LikeAndDislikeTable(db)
-	database.DislikeTable(db)
+	//database.DislikeTable(db)
 	database.CommentTable(db)
 
 	http.HandleFunc("/page", handlers.ForumHandler)
