@@ -8,7 +8,7 @@ import (
 )
 
 func addComment(userID, postID int, content string) error {
-	_, err := database.Db.Exec("INSERT INTO comments (user_id, post_id, content) VALUES (?, ?, ?)", userID, postID, content)
+	_, err := database.Db.Exec("INSERT INTO comments (user_id, post_id, comment) VALUES (?, ?, ?)", userID, postID, content)
 	return err
 }
 
@@ -17,7 +17,7 @@ type Comment struct {
 }
 
 func getComments() []Comment {
-	rows, err := database.Db.Query("SELECT content FROM comments ORDER BY created_at ASC")
+	rows, err := database.Db.Query("SELECT comment FROM comments ORDER BY created_at ASC")
 	if err != nil {
 		return nil
 	}
