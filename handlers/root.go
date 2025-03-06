@@ -23,13 +23,13 @@ func ForumHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Error loading template: "+err.Error(), http.StatusInternalServerError)
         return
     }
-
+	
     username := r.FormValue("username")
     password := r.FormValue("password")
     fmt.Println("Username:", username, "Password:", password)
 
     var storedHashedPassword string
-    err = database.Db.QueryRow("SELECT hashed_password FROM users WHERE name = ?", username).Scan(&storedHashedPassword)
+    err = Database.Db.QueryRow("SELECT hashed_password FROM users WHERE name = ?", username).Scan(&storedHashedPassword)
     if err == sql.ErrNoRows {
         http.Error(w, "User not found", http.StatusUnauthorized)
         return
@@ -76,7 +76,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	var storedHashedPassword string
 
-	err := database.Db.QueryRow("SELECT hashed_password FROM users WHERE username = ?", username).Scan(&storedHashedPassword)
+	err := Database.Db.QueryRow("SELECT hashed_password FROM users WHERE username = ?", username).Scan(&storedHashedPassword)
 	if err == sql.ErrNoRows {
 		http.Error(w, "User not found", http.StatusUnauthorized)
 		return
@@ -127,7 +127,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err = database.Db.Exec("INSERT INTO users (name, email, hashed_password) VALUES (?, ?, ?)", username, email, hashedPassword)
+		_, err = Database.Db.Exec("INSERT INTO users (name, email, hashed_password) VALUES (?, ?, ?)", username, email, hashedPassword)
 		if err != nil {
 			http.Error(w, "Error creating user", http.StatusInternalServerError)
 			return

@@ -5,12 +5,15 @@ import (
 	"log"
 	"net/http"
 
-	"forum/database"
+	Database "forum/database"
 )
 
 func checkIfLiked(userID, postID int) (bool, error) {
 	var count int
-	err := database.Db.QueryRow("SELECT COUNT(*) FROM likes WHERE user_id = ? AND post_id = ?", userID, postID).Scan(&count)
+	err := Database.Db.QueryRow(
+		"SELECT COUNT(*) FROM likes_dislikes WHERE user_id = ? AND post_id = ? AND is_like = 1",
+		userID, postID,
+	).Scan(&count)
 	if err != nil {
 		return false, err
 	}
@@ -33,25 +36,35 @@ func ToggleLikeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if liked {
-		_, err = database.Db.Exec("DELETE FROM likes WHERE user_id = ? AND post_id = ?", userID, postID)
-		if err != nil {
-			http.Error(w, "Failed to unlike post", http.StatusInternalServerError)
-			return
-		}
-		w.Write([]byte("Post unliked successfully"))
-	} else {
-		_, err = database.Db.Exec("INSERT INTO likes (user_id, post_id) VALUES (?, ?)", userID, postID)
-		if err != nil {
-			http.Error(w, "Failed to like post", http.StatusInternalServerError)
-			return
-		}
-		w.Write([]byte("Post liked successfully"))
+		w.Write([]byte("Post already liked"))
+		return
 	}
+
+	_, err = Database.Db.Exec(
+		"DELETE FROM likes_dislikes WHERE user_id = ? AND post_id = ? AND is_like = 0",
+		userID, postID,
+	)
+	if err != nil {
+		log.Printf("Error removing previous dislike: %v", err)
+	}
+
+	_, err = Database.Db.Exec(
+		"INSERT INTO likes_dislikes (user_id, post_id, is_like) VALUES (?, ?, 1)",
+		userID, postID,
+	)
+	if err != nil {
+		http.Error(w, "Failed to like post", http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte("Post liked successfully"))
 }
 
 func getLikesCount(postID int) int {
 	var count int
-	err := database.Db.QueryRow("SELECT COUNT(*) FROM likes WHERE post_id = ?", postID).Scan(&count)
+	err := Database.Db.QueryRow(
+		"SELECT COUNT(*) FROM likes_dislikes WHERE post_id = ? AND is_like = 1",
+		postID,
+	).Scan(&count)
 	if err != nil {
 		log.Printf("Error fetching likes count: %v", err)
 		return 0
@@ -64,9 +77,13 @@ func LikesCountHandler(w http.ResponseWriter, r *http.Request) {
 	count := getLikesCount(postID)
 	json.NewEncoder(w).Encode(map[string]int{"count": count})
 }
+
 func checkIfDisliked(userID, postID int) (bool, error) {
 	var count int
-	err := database.Db.QueryRow("SELECT COUNT(*) FROM dislikes WHERE user_id = ? AND post_id = ?", userID, postID).Scan(&count)
+	err := Database.Db.QueryRow(
+		"SELECT COUNT(*) FROM likes_dislikes WHERE user_id = ? AND post_id = ? AND is_like = 0",
+		userID, postID,
+	).Scan(&count)
 	if err != nil {
 		return false, err
 	}
@@ -80,7 +97,7 @@ func ToggleDislikeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := 1
-	postID := 1 
+	postID := 1
 
 	disliked, err := checkIfDisliked(userID, postID)
 	if err != nil {
@@ -89,25 +106,35 @@ func ToggleDislikeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if disliked {
-		_, err = database.Db.Exec("DELETE FROM dislikes WHERE user_id = ? AND post_id = ?", userID, postID)
-		if err != nil {
-			http.Error(w, "Failed to remove dislike", http.StatusInternalServerError)
-			return
-		}
-		w.Write([]byte("Dislike removed successfully"))
-	} else {
-		_, err = database.Db.Exec("INSERT INTO dislikes (user_id, post_id) VALUES (?, ?)", userID, postID)
-		if err != nil {
-			http.Error(w, "Failed to add dislike", http.StatusInternalServerError)
-			return
-		}
-		w.Write([]byte("Dislike added successfully"))
+		w.Write([]byte("Post already disliked"))
+		return
 	}
+
+	_, err = Database.Db.Exec(
+		"DELETE FROM likes_dislikes WHERE user_id = ? AND post_id = ? AND is_like = 1",
+		userID, postID,
+	)
+	if err != nil {
+		log.Printf("Error removing previous like: %v", err)
+	}
+
+	_, err = Database.Db.Exec(
+		"INSERT INTO likes_dislikes (user_id, post_id, is_like) VALUES (?, ?, 0)",
+		userID, postID,
+	)
+	if err != nil {
+		http.Error(w, "Failed to add dislike", http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte("Dislike added successfully"))
 }
 
 func getDislikesCount(postID int) int {
 	var count int
-	err := database.Db.QueryRow("SELECT COUNT(*) FROM dislikes WHERE post_id = ?", postID).Scan(&count)
+	err := Database.Db.QueryRow(
+		"SELECT COUNT(*) FROM likes_dislikes WHERE post_id = ? AND is_like = 0",
+		postID,
+	).Scan(&count)
 	if err != nil {
 		log.Printf("Error fetching dislikes count: %v", err)
 		return 0

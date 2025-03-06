@@ -36,29 +36,32 @@
     document.addEventListener('DOMContentLoaded', function() {
       updateLikes();
       updateDislikes();
+      updateReaction();  
       loadComments();
     });
-
+  
     function toggleLike(postID) {
       fetch('/like', { method: 'POST' })
         .then(response => response.text())
         .then(data => {
             console.log(data);
             updateLikes();
+            updateReaction();
         })
         .catch(error => console.error('Error:', error));
     }
-
+  
     function toggleDislike(postID) {
       fetch('/dislike', { method: 'POST' })
         .then(response => response.text())
         .then(data => {
             console.log(data);
             updateDislikes();
+            updateReaction();
         })
         .catch(error => console.error('Error:', error));
     }
-
+  
     function updateLikes() {
       fetch('/likes/count')
         .then(response => response.json())
@@ -67,7 +70,7 @@
         })
         .catch(error => console.error('Error:', error));
     }
-
+  
     function updateDislikes() {
       fetch('/dislikes/count')
         .then(response => response.json())
@@ -76,7 +79,25 @@
         })
         .catch(error => console.error('Error:', error));
     }
-
+  
+    function updateReaction() {
+      fetch('/reaction?postID=1')
+        .then(response => response.json())
+        .then(data => {
+          if (data.reaction === "like") {
+            document.getElementById('likeButton').classList.add('active');
+            document.getElementById('dislikeButton').classList.remove('active');
+          } else if (data.reaction === "dislike") {
+            document.getElementById('dislikeButton').classList.add('active');
+            document.getElementById('likeButton').classList.remove('active');
+          } else {
+            document.getElementById('likeButton').classList.remove('active');
+            document.getElementById('dislikeButton').classList.remove('active');
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+  
     function addComment(postID) {
       let content = document.getElementById('commentText').value;
       fetch('/comment', {
@@ -92,7 +113,7 @@
       })
       .catch(error => console.error('Error:', error));
     }
-
+  
     function loadComments() {
       fetch('/comments')
         .then(response => response.json())
@@ -108,5 +129,6 @@
         .catch(error => console.error('Error:', error));
     }
   </script>
+  
 </body>
 </html>

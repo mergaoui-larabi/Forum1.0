@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"forum/database"
+	database "forum/database"
 	"forum/handlers"
 	"forum/models"
 
@@ -13,11 +13,10 @@ import (
 )
 
 func main() {
-	db := database.Initdb()
+	db := database.CreateDatabse()
 	database.UserTable(db)
 	database.PostTable(db)
 	database.LikeAndDislikeTable(db)
-	database.DislikeTable(db)
 	database.CommentTable(db)
 
 	http.HandleFunc("/page", handlers.ForumHandler)
