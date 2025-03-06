@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
 	"forum/database"
 	"forum/handlers"
 	"forum/models"
@@ -31,6 +30,7 @@ func main() {
 	http.HandleFunc("/dislikes/count", models.DislikesCountHandler)
 	http.HandleFunc("/comments", models.CommentsHandler)
 	http.HandleFunc("/static/", handlers.StaticHnadler)
+	http.HandleFunc("/add_post", handlers.AddPostHandler)
 
 	fmt.Println("Server running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
