@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum</title>
+    <link rel="stylesheet" href="/static/css/auth.css">
+</head>
+<body>
+    <header>
+        <h1>{{.Title}}</h1>
+    </header>
+    <main class="container">
+        <h2>Register</h2>
+        <form method="post" action="/register">
+            <label for="username">Username :</label><br>
+            <input maxlength="50" type="text" name="username" id="username" placeholder="YOUR_NAME" required><br>
+            <label for="email">Email :</label><br>
+            <input maxlength="50" type="text" name="email" id="email" placeholder="YOUR_NAME@example.com" required><br>
+            <label for="password">Password :</label><br>
+            <input maxlength="50" type="password" id="password" name="password" placeholder="* * * * * *"><br>
+            <button type="submit" >Register</button>
+        </form>
+        <a href="/login">already have an account login here</a>
+    </main>
+</body>
+</html>
