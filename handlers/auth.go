@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"forum/config"
 	"forum/security"
@@ -31,17 +32,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(Users)
-
 	username := r.FormValue("email_user")
 	password := r.FormValue("password")
-
-	fmt.Println("u:", username, "p:", password)
-
 	user, ok := Users[username]
-	fmt.Println(user)
-	fmt.Println(ok)
-	fmt.Println(security.CheckPassword(password, user.HashedPassword))
 
 	if !ok || !security.CheckPassword(password, user.HashedPassword) {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
@@ -64,10 +57,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: false,
 	})
 
+	// xss , csrf , session hijacking
 	// need data base implemntaion
 	user.SessionToken = sessiontoken
 	user.CSRFToken = csrftoken
 	Users[username] = user
+
+
 
 }
 
@@ -100,4 +96,26 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 func AuthorizedHandler(w http.ResponseWriter, r *http.Request) {
 	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "register.html", nil)
+}
+
+var AuthError = errors.New("Unauthorized")
+
+func Authorized(r *http.Request) error {
+	username := r.FormValue("email_user")
+	user, ok := Users[username]
+	if !ok {
+		return AuthError
+	}
+
+	st, err := r.Cookie("session_token")
+	if err != nil || st.Value == "" || st.Value != user.SessionToken {
+		return AuthError
+	}
+
+	csrf := r.Header.Get("X-CSRF-Token")
+	if csrf != user.CSRFToken || csrf == "" {
+		return AuthError
+	}
+
+	return nil
 }
