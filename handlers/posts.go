@@ -3,9 +3,10 @@ package handlers
 import (
 	"log"
 	"net/http"
+	// "fmt"
 
 	"forum/database"
-
+	// "text/template"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -31,3 +32,34 @@ func AddPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/page", http.StatusSeeOther)
 }
+
+// func ShowPosts(w http.ResponseWriter, r *http.Request){
+// 	data, err := database.Db.Query("SELECT content FROM post")
+// 	if err != nil{
+// 		fmt.Println("Error opening or getting the posts data : ", err)
+// 		return 
+// 	}
+// 	defer data.Close()
+// 	contents := []string{}
+// 	for data.Next() {
+// 		var content string
+// 		if err := data.Scan(&content); err != nil {
+// 			log.Println("Error scanning row:", err)
+// 			continue
+// 		}
+// 		// fmt.Println(content)
+// 		contents = append(contents, content)
+// 	}
+// 	// return contents
+// 	// type Post struct {
+// 	// 	ID      int
+// 	// 	Content string
+// 	// }
+// 	// data1 := struct {
+// 	// 	Posts []Post
+// 	// }{
+// 	// 	Posts : contents,
+// 	// }
+// 	// tmpl.Execute(w, contents)
+
+// }

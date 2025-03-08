@@ -19,10 +19,10 @@ func main() {
 	//database.DislikeTable(db)
 	database.CommentTable(db)
 
-	http.HandleFunc("/page", handlers.ForumHandler)
-	http.HandleFunc("/", handlers.Login)
-	http.HandleFunc("/regist", handlers.Regist)
-	http.HandleFunc("/register", handlers.RegisterHandler)
+	http.HandleFunc("/", handlers.ForumHandler)
+	// http.HandleFunc("/", handlers.Login)
+	// http.HandleFunc("/regist", handlers.Regist)
+	// http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/like", models.ToggleLikeHandler)
 	http.HandleFunc("/dislike", models.ToggleDislikeHandler)
 	http.HandleFunc("/comment", models.CommentHandler)
@@ -31,6 +31,7 @@ func main() {
 	http.HandleFunc("/comments", models.CommentsHandler)
 	http.HandleFunc("/static/", handlers.StaticHnadler)
 	http.HandleFunc("/add_post", handlers.AddPostHandler)
+	// handlers.ShowPosts()
 
 	fmt.Println("Server running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

@@ -19,10 +19,10 @@
     </div>
     {{ end }}
 
+    {{ range .Posts }}
     <div class="card">
       <h2>Post Title</h2>
-      <p>This is an example post content.</p>
-      {{ if .IsLoggedIn }}
+      <p>{{ . }}</p>
       <button class="btn btn-like" onclick="toggleLike(1)">👍 Like</button>
       <button class="btn btn-dislike" onclick="toggleDislike(1)">👎 Dislike</button>
       <p id="likesCount">Likes: 0</p>
@@ -33,8 +33,8 @@
       <button class="btn btn-comment" onclick="addComment(1)">💬 Comment</button>
       {{ else }} 
       <p>You must be logged in to interact with this post.</p>
-      {{ end }}
     </div>
+    {{ end }}
   </div>
 
   <script>
