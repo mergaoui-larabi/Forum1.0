@@ -19,22 +19,34 @@
     </div>
     {{ end }}
 
-    {{ range .Posts }}
     <div class="card">
-      <h2>Post Title</h2>
-      <p>{{ . }}</p>
-      <button class="btn btn-like" onclick="toggleLike(1)">👍 Like</button>
-      <button class="btn btn-dislike" onclick="toggleDislike(1)">👎 Dislike</button>
-      <p id="likesCount">Likes: 0</p>
-      <p id="dislikesCount">Dislikes: 0</p>
-      <h3>Comments</h3>
-      <div id="comments"></div>
-      <textarea id="commentText" placeholder="Write a comment..."></textarea>
-      <button class="btn btn-comment" onclick="addComment(1)">💬 Comment</button>
+      {{ range .Posts }}
+        <h2>Post Title</h2>
+        <p>{{ .Content }}</p>
+        <button class="btn btn-like" onclick="toggleLike({{ .ID }})">👍 Like</button>
+        <button class="btn btn-dislike" onclick="toggleDislike({{ .ID }})">👎 Dislike</button>
+        <p id="likesCount-{{ .ID }}">Likes: 0</p>
+        <p id="dislikesCount-{{ .ID }}">Dislikes: 0</p>
+        <h3>Comments</h3>
+        <div id="comments-{{ .ID }}">
+          {{ if .Comments }}
+            {{ range .Comments }}
+              <div class="comment">
+                <p>{{ .Text }}</p>
+              </div>
+            {{ end }}
+          {{ else }}
+            <p>No comments yet.</p>
+          {{ end }}
+        </div>
+      <form class="post-bar" action="/add_comment" method="POST">
+        <input type="hidden" name="post_id" value="{{ .ID }}">
+        <textarea name="content" placeholder="comemnt"></textarea>
+        <button type="submit" class="btn btn-comment">💬 Comment</button>
+        </form>
       {{ else }} 
-      <p>You must be logged in to interact with this post.</p>
-    </div>
-    {{ end }}
+        <p>No posts available or you must be logged in to interact with this post.</p>
+      {{ end }}
   </div>
 
   <script>

@@ -3,13 +3,14 @@ package handlers
 import (
 	// "database/sql"
 	"fmt"
-	"net/http"
-	"text/template"
 	"log"
+	"net/http"
+	// "strings"
+	"text/template"
+	"database/sql"
+    _ "github.com/mattn/go-sqlite3"
 
 	"forum/database"
-
-	// "golang.org/x/crypto/bcrypt"
 )
 
 
@@ -25,21 +26,85 @@ func ForumHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Error loading template: "+err.Error(), http.StatusInternalServerError)
         return
     }
-	data, err := database.Db.Query("SELECT content FROM post")
-	if err != nil{
-		fmt.Println("Error opening or getting the posts data : ", err)
-		return 
+	// data, err := database.Db.Query("SELECT post.id, post.content, comments.id, comments.post_id, comments.comment FROM post LEFT JOIN comments ON post.id = comments.post_id ORDER BY post.id")
+	// if err != nil{
+	// 	fmt.Println("Error opening or getting the posts data : ", err)
+	// 	return 
+	// }
+	// defer data.Close()
+
+	// contents := []string{}
+	// for data.Next() {
+	// 	var temp string
+	// 	if err := data.Scan(&temp); err != nil {
+	// 		log.Println("Error scanning row:", err)
+	// 		continue
+	// 	}
+	// 	// fmt.Println(content)
+	// 	contents = append(contents, temp)
+	// }
+	// comments, err := database.Db.Exec("SELECT comments.id, comments.post_id, comments.comment FROM comments")
+	// if err != nil{
+	// 	log.Print("Failed to get data from Comment s table", err)
+	// }
+	// fmt.Println(comments)
+
+	type Comment struct {
+		ID     int
+		PostID int
+		Text   string
+	}
+	
+	type Post struct {
+		ID       int
+		Content  string
+		Comments []Comment
+	}
+	
+	postMap := make(map[int]Post)
+	
+	data, err := database.Db.Query(`
+		SELECT post.id, post.content, comments.id, comments.post_id, comments.comment 
+		FROM post 
+		LEFT JOIN comments ON post.id = comments.post_id
+		ORDER BY post.id
+	`)
+	if err != nil {
+		fmt.Println("Error executing query:", err)
+		return
 	}
 	defer data.Close()
-	contents := []string{}
+	
 	for data.Next() {
-		var temp string
-		if err := data.Scan(&temp); err != nil {
+		var postID int
+		var postContent string
+		var commentID, commentPostID sql.NullInt64
+		var commentText sql.NullString
+		
+		if err := data.Scan(&postID, &postContent, &commentID, &commentPostID, &commentText); err != nil {
 			log.Println("Error scanning row:", err)
 			continue
 		}
-		// fmt.Println(content)
-		contents = append(contents, temp)
+		
+		post, exists := postMap[postID]
+		if !exists {
+			post = Post{
+				ID:       postID,
+				Content:  postContent,
+				Comments: []Comment{},
+			}
+		}
+		
+		if commentID.Valid {
+			comment := Comment{
+				ID:     int(commentID.Int64),
+				PostID: int(commentPostID.Int64),
+				Text:   commentText.String,
+			}
+			post.Comments = append(post.Comments, comment)
+		}
+		
+		postMap[postID] = post
 	}
 
     // username := r.FormValue("username")
@@ -61,29 +126,14 @@ func ForumHandler(w http.ResponseWriter, r *http.Request) {
     //     return
     // }
 
-    data1 := struct {
-        IsLoggedIn bool
-		Posts []string
-    }{
-        IsLoggedIn: true,
-		Posts: contents,
-    }
-
-    // fmt.Println("User authenticated:", data.IsLoggedIn)
-	tmpl, err1 := template.ParseFiles("./static/templates/index.html")
-    if err1 != nil {
-		fmt.Println("hnaa")
-        log.Fatal(err1)
-    }
-
-    // if err := tmpl.ExecuteTemplate(w, "index.html", data); err != nil {
-    //     http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
-    //     return
-    // }
-	err = tmpl.Execute(w, data1)
-	if err != nil{
-		log.Println("Error executing template:", err)
+	var posts []Post
+	for _, post := range postMap {
+		posts = append(posts, post)
 	}
+
+	err = tmpl.Execute(w, map[string]interface{}{
+		"Posts": posts,
+	})
 
 }
 

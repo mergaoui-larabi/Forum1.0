@@ -31,6 +31,8 @@ func main() {
 	http.HandleFunc("/comments", models.CommentsHandler)
 	http.HandleFunc("/static/", handlers.StaticHnadler)
 	http.HandleFunc("/add_post", handlers.AddPostHandler)
+	http.HandleFunc("/add_comment", handlers.AddCommentHandler)
+
 	// handlers.ShowPosts()
 
 	fmt.Println("Server running on http://localhost:8080")
