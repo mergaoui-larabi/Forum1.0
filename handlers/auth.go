@@ -1,121 +1,150 @@
 package handlers
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"forum/config"
+	"forum/database"
 	"forum/security"
+	"log"
 	"net/http"
 	"time"
 )
 
-type Login struct {
-	HashedPassword string
-	SessionToken   string
-	CSRFToken      string
-}
+func AuthMidleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sessionCookie, err := r.Cookie("session_token")
+		if err != nil || sessionCookie.Value == "" {
+			ServLogin(w, r)
+			return
+		}
 
-var Users = map[string]Login{}
+		user_id, exist := database.GetUserBySession(sessionCookie.Value)
+		if !exist {
+			if err != nil || sessionCookie.Value == "" {
+				ServLogin(w, r)
+				return
+			}
+		}
 
-func FromHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.URL.Path {
-	case "/login-form":
-		config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "login.html", nil)
-	case "/register-form":
-		config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "register.html", nil)
+		ctx := context.WithValue(r.Context(), "user_id", user_id)
+		next(w, r.WithContext(ctx))
+
 	}
 }
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+func SwitchLogin(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		ServLogin(w, r)
+	case http.MethodPost:
+		SubmitLogin(w, r)
+	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+	}
+}
+
+func SwitchRegister(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		ServRegister(w, r)
+	case http.MethodPost:
+		SubmitRegister(w, r)
+	default:
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+	}
+}
+
+func ServLogin(w http.ResponseWriter, r *http.Request) {
+	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "login.html", nil)
+}
+
+func ServRegister(w http.ResponseWriter, r *http.Request) {
+	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "register.html", nil)
+}
+
+func SubmitRegister(w http.ResponseWriter, r *http.Request) {
+	username := r.FormValue("username")
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+	confirm_password := r.FormValue("confirm_password")
+
+	if !config.ValidUsername(username) || !config.ValidEmail(email) || len(password) < 8 || confirm_password != password { //TODO: it should be a better way
+		ServRegister(w, r)
 		return
 	}
 
-	username := r.FormValue("email_user")
-	password := r.FormValue("password")
-	user, ok := Users[username]
-
-	if !ok || !security.CheckPassword(password, user.HashedPassword) {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+	hash, err := security.HashPassword(password)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	err = database.AddNewUser(username, email, hash)
+	if err != nil {
+		if err.Error() == "UNIQUE constraint failed: users.username" || err.Error() == "UNIQUE constraint failed: users.email" {
+			http.Error(w, "Username or email already exists.", http.StatusConflict)
+		} else {
+			log.Printf("Error adding user: %v", err)
+			http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		}
+		return
 	}
 
-	sessiontoken := security.GenerateToken(32)
-	csrftoken := security.GenerateToken(32)
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    sessiontoken,
-		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: true,
-	})
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "csrf_token",
-		Value:    csrftoken,
-		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: false,
-	})
-
-	// xss , csrf , session hijacking
-	// need data base implemntaion
-	user.SessionToken = sessiontoken
-	user.CSRFToken = csrftoken
-	Users[username] = user
-
-
-
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
-func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	// email := r.FormValue("email")
+func SubmitLogin(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	if len(username) < 8 || len(password) < 8 {
-		http.Error(w, http.StatusText(http.StatusNonAuthoritativeInfo), http.StatusNotAcceptable)
+	if (!config.ValidUsername(username) && !config.ValidEmail(username)) || len(password) < 8 || !database.AlreadyExists(username, username) { //TODO: it should be a better way
+		ServLogin(w, r)
 		return
 	}
 
-	if _, ok := Users[username]; ok {
-		http.Error(w, http.StatusText(http.StatusConflict), http.StatusConflict)
+	user_id, hash := database.GetUserHash(username)
+
+	if !security.CheckPassword(password, hash) {
+		http.Error(w, "wrong passwrod", http.StatusUnauthorized)
 		return
 	}
-	hashpass, _ := security.HashPassword(password)
 
-	Users[username] = Login{
-		HashedPassword: hashpass,
-	}
+	session := security.GenerateToken(32) // TODO: UUID bonus csrf implementation genrate csrf read it in front end js and match it with server go
 
-	fmt.Fprint(w, "u did it")
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    session,
+		Expires:  time.Now().Add(time.Hour * 1),
+		HttpOnly: true,
+	})
+
+	database.SetSessionToken(user_id, session)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "register.html", nil)
-}
 
-func AuthorizedHandler(w http.ResponseWriter, r *http.Request) {
-	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "register.html", nil)
-}
-
-var AuthError = errors.New("Unauthorized")
-
-func Authorized(r *http.Request) error {
-	username := r.FormValue("email_user")
-	user, ok := Users[username]
-	if !ok {
-		return AuthError
+	sessionCookie, err := r.Cookie("session_token")
+	if err != nil || sessionCookie.Value == "" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
 	}
 
-	st, err := r.Cookie("session_token")
-	if err != nil || st.Value == "" || st.Value != user.SessionToken {
-		return AuthError
+	hasSession := database.DeleteUserBySession(sessionCookie.Value)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HttpOnly: true,
+	})
+
+	if !hasSession {
+		http.Error(w, "Session not found", http.StatusUnauthorized)
+		return
 	}
 
-	csrf := r.Header.Get("X-CSRF-Token")
-	if csrf != user.CSRFToken || csrf == "" {
-		return AuthError
-	}
-
-	return nil
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

@@ -7,8 +7,21 @@
     <title>Document</title>
 </head>
 <body>
-    forum start now!!! {{.}}<br>
-    <a href="/login-form">login</a>
-    <a href="/register-form">register</a>
+    <header class="nav">
+        <div class="profile">
+            <a href="/profile">ProfileIcon</a>
+            {{if .Authenticated}}
+                <a href="/logout">Logout</a>
+            {{else}}
+                <a href="/login">Login</a>
+                <a href="/register">Sign Up</a>
+            {{end}}
+        </div>
+    </header>
+    <div class="post-container">
+        <a href="/post">/post</a><br>
+        <a href="/like">/like</a><br>
+        <a href="/comment">/comment</a>
+    </div>
 </body>
 </html>

@@ -4,22 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/auth.css">
-    <title>Forum</title>
+    <title>Login</title>
 </head>
 <body>
-    <header>
-        <h1>{{.Title}}</h1>
-    </header>
-    <main class="container">
-        <h2>Login</h2>
-        <form method="post" action="/login">
-            <label for="email_user">username or email :</label><br>
-            <input maxlength="50" type="text" name="email_user" id="email_user" placeholder="YOUR_NAME@example.com" required><br>
-            <label for="password">Password :</label><br>
-            <input maxlength="50" type="password" id="password" name="password" placeholder="* * * * * *" required><br>
+    <div class="form-container">
+        <h1>Login</h1>
+        <form action="/login" method="POST">
+            <div>
+                <label for="username">Username or Email:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
             <button type="submit">Login</button>
         </form>
-        <a href="/register">don't have an account create one now !!!</a>
-    </main>
+        <p>Don't have an account? <a href="/register">Register here</a>.</p>
+    </div>
 </body>
 </html>
