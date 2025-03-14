@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"forum/database"
 	"forum/handlers"
 	"forum/models"
 
 	_ "github.com/mattn/go-sqlite3"
+	database "forum/database"
 )
 
 func main() {

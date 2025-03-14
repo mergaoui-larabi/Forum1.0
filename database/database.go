@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var Db *sql.DB
@@ -14,6 +15,14 @@ func Initdb() *sql.DB {
 		log.Fatal("Error opening database:", err)
 	}
 	return Db
+}
+
+func CreateDatabse() *sql.DB{
+	db, err := sql.Open("sqlite3", "forum.db")
+	if err != nil{
+		log.Fatal(err)
+	}
+	return db
 }
 
 func UserTable(db *sql.DB) {
@@ -46,20 +55,20 @@ func PostTable(db *sql.DB) {
 	}
 }
 
-
 func LikeAndDislikeTable(db *sql.DB) {
 	query := `
-	CREATE TABLE IF NOT EXISTS likes (
+	CREATE TABLE IF NOT EXISTS likes_dislikes (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT NULL,
-		post_id INTEGER NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		user_id INTEGER,
+		post_id INTEGER,
+		is_like BOOLEAN NOT NULL,
 		FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
-		FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE
+		FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
+		UNIQUE(user_id, post_id)
 	);`
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Fatal("Error creating likes table:", err)
+		log.Fatal(err)
 	}
 }
 
@@ -67,8 +76,8 @@ func CommentTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS comments (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT NULL,
-		post_id INTEGER NOT NULL,
+		user_id INTEGER,
+		post_id INTEGER,
 		comment TEXT NOT NULL,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -76,7 +85,7 @@ func CommentTable(db *sql.DB) {
 	);`
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Fatal("Error creating comments table:", err)
+		log.Fatal(err)
 	}
 }
 
@@ -86,6 +95,23 @@ func CategoriesTable(db *sql.DB) {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT UNIQUE NOT NULL
 	);`
+	_, err := db.Exec(query)
+	if err != nil {
+		log.Fatal("Error creating categories table:", err)
+	}
+}
+
+func Session(db *sql.DB) {
+	query := `
+	CREATE TABLE sessions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		session_token TEXT UNIQUE NOT NULL,
+		expires_at DATETIME NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+`
 	_, err := db.Exec(query)
 	if err != nil {
 		log.Fatal("Error creating categories table:", err)
