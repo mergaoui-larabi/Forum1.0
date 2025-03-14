@@ -7,7 +7,6 @@ import (
 	"fmt"
 )
 
-
 func AddLikesAndDislikes(w http.ResponseWriter, r *http.Request){
 	UserId := 1
 	if r.Method != "POST" {
