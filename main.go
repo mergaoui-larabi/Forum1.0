@@ -32,6 +32,7 @@ func main() {
 	http.HandleFunc("/static/", handlers.StaticHnadler)
 	http.HandleFunc("/add_post", handlers.AddPostHandler)
 	http.HandleFunc("/add_comment", handlers.AddCommentHandler)
+	http.HandleFunc("/add_like", handlers.AddLikesAndDislikes)
 
 	// handlers.ShowPosts()
 

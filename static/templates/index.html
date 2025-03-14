@@ -16,17 +16,28 @@
     {{ if not .IsLoggedIn }}
     <div class="login-prompt">
       <p>Please <a href="/login">login</a> to like or comment.</p>
-    </div>
+  </div>
     {{ end }}
 
-    <div class="card">
-      {{ range .Posts }}
+    <div class="posts-container">
+    {{ range .Posts }}
+  <div class="card">
         <h2>Post Title</h2>
         <p>{{ .Content }}</p>
-        <button class="btn btn-like" onclick="toggleLike({{ .ID }})">👍 Like</button>
-        <button class="btn btn-dislike" onclick="toggleDislike({{ .ID }})">👎 Dislike</button>
-        <p id="likesCount-{{ .ID }}">Likes: 0</p>
-        <p id="dislikesCount-{{ .ID }}">Dislikes: 0</p>
+        <form class="post-bar" action="/add_like" method="POST">
+          <input type="hidden" name="post_id" value="{{ .ID }}">
+          <input type="hidden" name="value" value="1">
+          <button class="btn btn-like" type="submit">👍 Like</button>
+      </form>
+      
+      <form class="post-bar" action="/add_like" method="POST">
+          <input type="hidden" name="post_id" value="{{ .ID }}">
+          <input type="hidden" name="value" value="0">
+          <button class="btn btn-like" type="submit">👎 Dislike</button>
+      </form>
+      
+        <p id="likesCount-{{ .ID }}">Likes: {{ .Likes }}</p>
+        <p id="dislikesCount-{{ .ID }}">Dislikes: {{ .Dislikes }}</p>
         <h3>Comments</h3>
         <div id="comments-{{ .ID }}">
           {{ if .Comments }}
@@ -44,10 +55,12 @@
         <textarea name="content" placeholder="comemnt"></textarea>
         <button type="submit" class="btn btn-comment">💬 Comment</button>
         </form>
-      {{ else }} 
-        <p>No posts available or you must be logged in to interact with this post.</p>
+      </div>
       {{ end }}
-  </div>
+    </div>
+      {{ if not .Posts  }} 
+        <p>No posts available</p>
+      {{ end }}
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {

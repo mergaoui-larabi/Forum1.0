@@ -50,7 +50,7 @@ func ForumHandler(w http.ResponseWriter, r *http.Request) {
 
 	type Comment struct {
 		ID     int
-		PostID int
+		PostId int
 		Text   string
 	}
 	
@@ -58,15 +58,27 @@ func ForumHandler(w http.ResponseWriter, r *http.Request) {
 		ID       int
 		Content  string
 		Comments []Comment
+		Likes int
+		Dislikes int
+	}
+	type Like struct{
+		ID int
+		PostId int
+		likeOrDislike bool
 	}
 	
 	postMap := make(map[int]Post)
 	
 	data, err := database.Db.Query(`
-		SELECT post.id, post.content, comments.id, comments.post_id, comments.comment 
-		FROM post 
-		LEFT JOIN comments ON post.id = comments.post_id
-		ORDER BY post.id
+		SELECT post.id, post.content, 
+    COUNT(CASE WHEN likes_dislikes.is_like = 1 THEN 1 END) AS like_count,
+    COUNT(CASE WHEN likes_dislikes.is_like = 0 THEN 1 END) AS dislike_count,
+    comments.post_id, comments.comment 
+	FROM post
+	LEFT JOIN comments ON post.id = comments.post_id
+	LEFT JOIN likes_dislikes ON post.id = likes_dislikes.post_id
+	GROUP BY post.id
+	ORDER BY post.id;
 	`)
 	if err != nil {
 		fmt.Println("Error executing query:", err)
@@ -75,35 +87,39 @@ func ForumHandler(w http.ResponseWriter, r *http.Request) {
 	defer data.Close()
 	
 	for data.Next() {
-		var postID int
+		var PostId int
 		var postContent string
-		var commentID, commentPostID sql.NullInt64
+		var commentID, commentPostId sql.NullInt64
 		var commentText sql.NullString
+		var likes, dislikes int
 		
-		if err := data.Scan(&postID, &postContent, &commentID, &commentPostID, &commentText); err != nil {
+		if err := data.Scan(&PostId, &postContent, &likes, &dislikes, &commentID, &commentText); err != nil {
 			log.Println("Error scanning row:", err)
 			continue
 		}
-		
-		post, exists := postMap[postID]
+		// fmt.Println("Likes are :", likes)
+		// fmt.Println("DisLikes are :", dislikes)
+		post, exists := postMap[PostId]
 		if !exists {
 			post = Post{
-				ID:       postID,
+				ID:       PostId,
 				Content:  postContent,
 				Comments: []Comment{},
+				Likes:    likes,     
+				Dislikes: dislikes,
 			}
 		}
 		
 		if commentID.Valid {
 			comment := Comment{
 				ID:     int(commentID.Int64),
-				PostID: int(commentPostID.Int64),
+				PostId: int(commentPostId.Int64),
 				Text:   commentText.String,
 			}
 			post.Comments = append(post.Comments, comment)
 		}
 		
-		postMap[postID] = post
+		postMap[PostId] = post
 	}
 
     // username := r.FormValue("username")
