@@ -24,20 +24,16 @@
   <div class="card">
         <h2>Post Title</h2>
         <p>{{ .Content }}</p>
-        <form class="post-bar" action="/add_like" method="POST">
+      <form class="post-bar" action="/add_like" method="POST">
           <input type="hidden" name="post_id" value="{{ .ID }}">
           <input type="hidden" name="value" value="1">
-          <button class="btn btn-like" type="submit">👍 Like</button>
+          <button class="btn btn-like" type="submit">👍 Likes : {{ .Likes }}</button>
       </form>
-      
       <form class="post-bar" action="/add_like" method="POST">
           <input type="hidden" name="post_id" value="{{ .ID }}">
           <input type="hidden" name="value" value="0">
-          <button class="btn btn-like" type="submit">👎 Dislike</button>
+          <button class="btn btn-like" type="submit">👎 Dislike : {{ .Dislikes }}</button>
       </form>
-      
-        <p id="likesCount-{{ .ID }}">Likes: {{ .Likes }}</p>
-        <p id="dislikesCount-{{ .ID }}">Dislikes: {{ .Dislikes }}</p>
         <h3>Comments</h3>
         <div id="comments-{{ .ID }}">
           {{ if .Comments }}
