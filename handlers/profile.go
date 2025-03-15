@@ -90,6 +90,18 @@ func SaveChanges(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func ServeDelete(w http.ResponseWriter, r *http.Request) {
+	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "delete.html", nil)
+}
+
 func DeleteConfirmation(w http.ResponseWriter, r *http.Request) {
-	
+	user_id := r.Context().Value(userIDKey).(int)
+	password := r.FormValue("password")
+	hash := database.GetUserHashById(user_id)
+	if !security.CheckPassword(password, hash) {
+		http.Redirect(w, r, "/profile/delete", http.StatusSeeOther)
+		return
+	}
+	database.DeleteUser(user_id)
+	LogoutHandler(w, r)
 }

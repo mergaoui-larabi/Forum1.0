@@ -125,6 +125,14 @@ func UpdatePassword(id int, password string) {
 	}
 }
 
+func DeleteUser(user_id int) {
+	query := `DELETE FROM users WHERE id = ?`
+	_, err := DB.Exec(query, user_id)
+	if err != nil {
+		log.Println("delete", err)
+	}
+}
+
 // func GetUserId(username string) int {
 // 	var id int
 
