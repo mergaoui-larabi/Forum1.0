@@ -1,6 +1,7 @@
 package database
 
 import (
+	"forum/models"
 	"log"
 )
 
@@ -30,6 +31,16 @@ func GetUserHash(username string) (int, string) {
 		log.Println(err)
 	}
 	return id, hash
+}
+
+func GetUserHashById(id int) string {
+	var hash string
+	query := `SELECT password_hash FROM users WHERE id = ?`
+	err := DB.QueryRow(query, id).Scan(&hash)
+	if err != nil {
+		log.Println(err)
+	}
+	return hash
 }
 
 func SetSessionToken(id int, token string) {
@@ -68,6 +79,50 @@ func DeleteUserBySession(session_id string) bool {
 		return false
 	}
 	return true
+}
+
+func GetUserInfo(user_id int) models.User {
+	var user models.User
+
+	user_query := `SELECT * FROM users WHERE id = ?`
+	err := DB.QueryRow(user_query, user_id).Scan(&user.Id, &user.Username, &user.Email, &user.Password_hash, &user.Created_at, &user.Updated_at, &user.Email_verified)
+	if err != nil {
+		return user
+	}
+	return user
+}
+
+func UpdateUsernmae(id int, username string) {
+	query := `UPDATE users SET updated_at = DATETIME('now') , username = ? WHERE id = ?`
+	res, err := DB.Exec(query, username, id)
+	if err != nil {
+		log.Println(err)
+	}
+	if count, _ := res.RowsAffected(); count > 0 {
+		return
+	}
+}
+
+func UpdateEmail(id int, email string) {
+	query := `UPDATE users SET updated_at = DATETIME('now') , email = ? WHERE id = ?`
+	res, err := DB.Exec(query, email, id)
+	if err != nil {
+		log.Println(err)
+	}
+	if count, _ := res.RowsAffected(); count > 0 {
+		return
+	}
+}
+
+func UpdatePassword(id int, password string) {
+	query := `UPDATE users SET updated_at = DATETIME('now') , password_hash = ? WHERE id = ?`
+	res, err := DB.Exec(query, password, id)
+	if err != nil {
+		log.Println(err)
+	}
+	if count, _ := res.RowsAffected(); count > 0 {
+		return
+	}
 }
 
 // func GetUserId(username string) int {

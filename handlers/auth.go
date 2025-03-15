@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+type contextKey string
+
+const userIDKey contextKey = "user_id"
+
 func AuthMidleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sessionCookie, err := r.Cookie("session_token")
@@ -21,15 +25,12 @@ func AuthMidleware(next http.HandlerFunc) http.HandlerFunc {
 
 		user_id, exist := database.GetUserBySession(sessionCookie.Value)
 		if !exist {
-			if err != nil || sessionCookie.Value == "" {
-				ServLogin(w, r)
-				return
-			}
+			ServLogin(w, r)
+			return
 		}
 
-		ctx := context.WithValue(r.Context(), "user_id", user_id)
+		ctx := context.WithValue(r.Context(), userIDKey, user_id) //avoid collisions
 		next(w, r.WithContext(ctx))
-
 	}
 }
 

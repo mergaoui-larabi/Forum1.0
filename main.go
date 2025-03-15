@@ -20,7 +20,13 @@ func main() {
 	forumux := http.NewServeMux()
 	forumux.HandleFunc("/login", handlers.SwitchLogin)
 	forumux.HandleFunc("/register", handlers.SwitchRegister)
-	forumux.HandleFunc("/logout",handlers.LogoutHandler)
+	forumux.HandleFunc("/logout", handlers.LogoutHandler)
+
+	forumux.HandleFunc("/profile", handlers.AuthMidleware(handlers.ProfilHandler))
+	forumux.HandleFunc("/profile/update/{value}", handlers.AuthMidleware(handlers.UpddateProfile))
+	forumux.HandleFunc("/profile/update/{value}/save", handlers.AuthMidleware(handlers.SaveChanges))
+	forumux.HandleFunc("/profile/delete", handlers.AuthMidleware(handlers.ProfilHandler))
+	forumux.HandleFunc("/profile/delete/confirm", handlers.AuthMidleware(handlers.ProfilHandler))
 
 	forumux.HandleFunc("/like", handlers.AuthMidleware(handlers.LikeHandler))
 	forumux.HandleFunc("/post", handlers.AuthMidleware(handlers.PostHandler))

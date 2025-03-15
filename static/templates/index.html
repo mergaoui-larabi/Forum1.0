@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/index.css">
-    <title>Document</title>
+    <title>Forum</title>
 </head>
 <body>
     <header class="nav">
         <div class="profile">
-            <a href="/profile">ProfileIcon</a>
             {{if .Authenticated}}
+                <a href="/profile">{{.Username}}</a>
                 <a href="/logout">Logout</a>
             {{else}}
+                <a href="/profile">Guest</a>
                 <a href="/login">Login</a>
                 <a href="/register">Sign Up</a>
             {{end}}
