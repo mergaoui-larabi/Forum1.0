@@ -32,7 +32,7 @@ func UpddateProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func SaveChanges(w http.ResponseWriter, r *http.Request) {
-	user_id := r.Context().Value("user_id").(int)
+	user_id := r.Context().Value(userIDKey).(int)
 	switch r.PathValue("value") {
 	case "username":
 		new_username := r.FormValue("username")
