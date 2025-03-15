@@ -8,7 +8,6 @@ import (
 	"forum/database"
 	"forum/handlers"
 	"net/http"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 

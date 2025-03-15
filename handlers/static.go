@@ -22,3 +22,4 @@ func StaticHnadler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.ServeFile(w, r, url)
 }
+
