@@ -4,3 +4,4 @@ authentifcation:
     change password
     change email
     delete acc
+    session overwriting

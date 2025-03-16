@@ -2,11 +2,9 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"forum/config"
 	"forum/database"
 	"forum/security"
-	"log"
 	"net/http"
 	"time"
 )
@@ -14,6 +12,7 @@ import (
 type contextKey string
 
 const userIDKey contextKey = "user_id"
+const errorCase contextKey = "error_case"
 
 func AuthMidleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -57,11 +56,19 @@ func SwitchRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServLogin(w http.ResponseWriter, r *http.Request) {
-	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "login.html", nil)
+	var errMap map[string]interface{}
+	if r.Context().Value(errorCase) != nil {
+		errMap = r.Context().Value(errorCase).(map[string]interface{})
+	}
+	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "login.html", errMap)
 }
 
 func ServRegister(w http.ResponseWriter, r *http.Request) {
-	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "register.html", nil)
+	var errMap map[string]interface{}
+	if r.Context().Value(errorCase) != nil {
+		errMap = r.Context().Value(errorCase).(map[string]interface{})
+	}
+	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "register.html", errMap)
 }
 
 func SubmitRegister(w http.ResponseWriter, r *http.Request) {
@@ -71,22 +78,23 @@ func SubmitRegister(w http.ResponseWriter, r *http.Request) {
 	confirm_password := r.FormValue("confirm_password")
 
 	if !config.ValidUsername(username) || !config.ValidEmail(email) || len(password) < 8 || confirm_password != password { //TODO: it should be a better way
-		ServRegister(w, r)
+		ctx := context.WithValue(r.Context(), errorCase, map[string]interface{}{"Error": true, "Message": "invalid credentials try again"})
+		ServRegister(w, r.WithContext(ctx))
 		return
 	}
 
 	hash, err := security.HashPassword(password)
 	if err != nil {
-		fmt.Println(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	err = database.AddNewUser(username, email, hash)
 	if err != nil {
 		if err.Error() == "UNIQUE constraint failed: users.username" || err.Error() == "UNIQUE constraint failed: users.email" {
-			http.Error(w, "Username or email already exists.", http.StatusConflict)
+			ctx := context.WithValue(r.Context(), errorCase, map[string]interface{}{"Error": true, "Message": "username or email alredy used"})
+			ServRegister(w, r.WithContext(ctx))
+			return
 		} else {
-			log.Printf("Error adding user: %v", err)
 			http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		}
 		return
@@ -100,14 +108,16 @@ func SubmitLogin(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if (!config.ValidUsername(username) && !config.ValidEmail(username)) || len(password) < 8 || !database.AlreadyExists(username, username) { //TODO: it should be a better way
-		ServLogin(w, r)
+		ctx := context.WithValue(r.Context(), errorCase, map[string]interface{}{"Error": true, "Message": "invalid credentials try again"})
+		ServLogin(w, r.WithContext(ctx))
 		return
 	}
 
 	user_id, hash := database.GetUserHash(username)
 
 	if !security.CheckPassword(password, hash) {
-		http.Error(w, "wrong passwrod", http.StatusUnauthorized)
+		ctx := context.WithValue(r.Context(), errorCase, map[string]interface{}{"Error": true, "Message": "Wrong password try again"})
+		ServLogin(w, r.WithContext(ctx))
 		return
 	}
 
@@ -138,7 +148,8 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    "",
-		Expires:  time.Now().Add(-time.Hour),
+		Path:     "/",
+		Expires:  time.Now().Add(-1 * time.Hour),
 		HttpOnly: true,
 	})
 

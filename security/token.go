@@ -13,5 +13,5 @@ func GenerateToken(length int) string {
 	if _, err := rand.Read(bytes); err != nil {
 		log.Fatalf("failed to generat token %v", err)
 	}
-	return base64.URLEncoding.EncodeToString(bytes)
+	return base64.URLEncoding.EncodeToString(bytes) // a-z A-Z /+
 }

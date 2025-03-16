@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"forum/config"
 	"forum/database"
@@ -15,16 +16,20 @@ func ProfilHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpddateProfile(w http.ResponseWriter, r *http.Request) {
+	var errMap map[string]any
 	value := r.PathValue("value")
+	if r.Context().Value(errorCase) != nil {
+		errMap = r.Context().Value(errorCase).(map[string]any)
+	}
 	switch value {
 	case "username":
-		config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "update.html", map[string]bool{"username": true})
+		config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "update.html", map[string]any{"username": true, "Error": errMap["Error"], "Message": errMap["Message"]})
 		return
 	case "email":
-		config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "update.html", map[string]bool{"email": true})
+		config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "update.html", map[string]any{"email": true, "Error": errMap["Error"], "Message": errMap["Message"]})
 		return
 	case "password":
-		config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "update.html", map[string]bool{"password": true})
+		config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "update.html", map[string]any{"password": true, "Error": errMap["Error"], "Message": errMap["Message"]})
 		return
 	default:
 		http.Error(w, "bad req", http.StatusBadRequest)
@@ -35,17 +40,28 @@ func SaveChanges(w http.ResponseWriter, r *http.Request) {
 	user_id := r.Context().Value(userIDKey).(int)
 	switch r.PathValue("value") {
 	case "username":
+
 		new_username := r.FormValue("username")
 		password := r.FormValue("current")
 		if !config.ValidUsername(new_username) {
-			http.Redirect(w, r, "/profile/update/username", http.StatusSeeOther)
+			ctx := context.WithValue(r.Context(), errorCase, map[string]any{"Error": true, "Message": "Please enter a valid username"})
+			UpddateProfile(w, r.WithContext(ctx))
 			return
 		}
+
 		hash := database.GetUserHashById(user_id)
 		if !security.CheckPassword(password, hash) {
-			http.Redirect(w, r, "/profile/update/username", http.StatusSeeOther)
+			ctx := context.WithValue(r.Context(), errorCase, map[string]any{"Error": true, "Message": "Please enter a valid username"})
+			UpddateProfile(w, r.WithContext(ctx))
 			return
 		}
+
+		if database.DupplicatedUsername(new_username) {
+			ctx := context.WithValue(r.Context(), errorCase, map[string]any{"Error": true, "Message": "Username Alredy exists try again"})
+			UpddateProfile(w, r.WithContext(ctx))
+			return
+		}
+
 		database.UpdateUsernmae(user_id, new_username)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
@@ -53,14 +69,23 @@ func SaveChanges(w http.ResponseWriter, r *http.Request) {
 		new_email := r.FormValue("email")
 		password := r.FormValue("current")
 		if !config.ValidEmail(new_email) {
-			http.Redirect(w, r, "/profile/update/email", http.StatusSeeOther)
+			ctx := context.WithValue(r.Context(), errorCase, map[string]any{"Error": true, "Message": "Invalid email try again"})
+			UpddateProfile(w, r.WithContext(ctx))
 			return
 		}
 		hash := database.GetUserHashById(user_id)
 		if !security.CheckPassword(password, hash) {
-			http.Redirect(w, r, "/profile/update/email", http.StatusSeeOther)
+			ctx := context.WithValue(r.Context(), errorCase, map[string]any{"Error": true, "Message": "Wrong password"})
+			UpddateProfile(w, r.WithContext(ctx))
 			return
 		}
+
+		if database.DupplicatedEmail(new_email) {
+			ctx := context.WithValue(r.Context(), errorCase, map[string]any{"Error": true, "Message": "Email Alredy exists try again"})
+			UpddateProfile(w, r.WithContext(ctx))
+			return
+		}
+
 		database.UpdateEmail(user_id, new_email)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
@@ -69,12 +94,19 @@ func SaveChanges(w http.ResponseWriter, r *http.Request) {
 		new := r.FormValue("new")
 		confirm := r.FormValue("confirm")
 		hash := database.GetUserHashById(user_id)
+		if current == new {
+			ctx := context.WithValue(r.Context(), errorCase, map[string]any{"Error": true, "Message": "You used an Old password"})
+			UpddateProfile(w, r.WithContext(ctx))
+			return
+		}
 		if !security.CheckPassword(current, hash) {
-			http.Redirect(w, r, "/profile/update/password", http.StatusSeeOther)
+			ctx := context.WithValue(r.Context(), errorCase, map[string]any{"Error": true, "Message": "Wrong password"})
+			UpddateProfile(w, r.WithContext(ctx))
 			return
 		}
 		if new != confirm {
-			http.Redirect(w, r, "/profile/update/password", http.StatusSeeOther)
+			ctx := context.WithValue(r.Context(), errorCase, map[string]any{"Error": true, "Message": "Please Confirm Your password"})
+			UpddateProfile(w, r.WithContext(ctx))
 			return
 		}
 		new_hash, err := security.HashPassword(new)
@@ -91,7 +123,11 @@ func SaveChanges(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeDelete(w http.ResponseWriter, r *http.Request) {
-	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "delete.html", nil)
+	var errMap map[string]any
+	if r.Context().Value(errorCase) != nil {
+		errMap = r.Context().Value(errorCase).(map[string]any)
+	}
+	config.GLOBAL_TEMPLATE.ExecuteTemplate(w, "delete.html", errMap)
 }
 
 func DeleteConfirmation(w http.ResponseWriter, r *http.Request) {
@@ -99,9 +135,10 @@ func DeleteConfirmation(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 	hash := database.GetUserHashById(user_id)
 	if !security.CheckPassword(password, hash) {
-		http.Redirect(w, r, "/profile/delete", http.StatusSeeOther)
+		ctx := context.WithValue(r.Context(), errorCase, map[string]any{"Error": true, "Message": "Wrong password"})
+		ServeDelete(w, r.WithContext(ctx))
 		return
 	}
-	database.DeleteUser(user_id)
 	LogoutHandler(w, r)
+	database.DeleteUser(user_id)
 }

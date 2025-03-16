@@ -5,6 +5,26 @@ import (
 	"log"
 )
 
+func DupplicatedUsername(username string) bool {
+	var count int
+	query := `SELECET COUNT(*) FROM users WHERE username = ?`
+	err := DB.QueryRow(query, username).Scan(&count)
+	if err != nil {
+		log.Println(err)
+	}
+	return count > 0
+}
+
+func DupplicatedEmail(email string) bool {
+	var count int
+	query := `SELECET COUNT(*) FROM users WHERE email = ?`
+	err := DB.QueryRow(query, email).Scan(&count)
+	if err != nil {
+		log.Println(err)
+	}
+	return count > 0
+}
+
 func AddNewUser(username, email, hashedPass string) error {
 	query := `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`
 	_, err := DB.Exec(query, username, email, hashedPass)
