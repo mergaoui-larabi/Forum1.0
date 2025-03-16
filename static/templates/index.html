@@ -27,7 +27,7 @@
       <form class="post-bar" action="/add_like" method="POST">
           <input type="hidden" name="post_id" value="{{ .ID }}">
           <input type="hidden" name="value" value="1">
-          <button class="btn btn-like" type="submit">👍 Likes : {{ .Likes }}</button>
+          <button class="btn btn-like" type="submit" formaction="">👍 Likes : {{ .Likes }}</button>
       </form>
       <form class="post-bar" action="/add_like" method="POST">
           <input type="hidden" name="post_id" value="{{ .ID }}">
