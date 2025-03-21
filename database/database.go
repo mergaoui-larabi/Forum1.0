@@ -38,3 +38,5 @@ func CloseDB() {
 		log.Fatal("Error closing database:", err)
 	}
 }
+
+

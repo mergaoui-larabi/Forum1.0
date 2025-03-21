@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/index.css">
-    <title>Forum</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forum</title>
+  <link rel="stylesheet" href="/static/css/index.css">
 </head>
 <body>
     <header class="nav">
@@ -19,10 +20,137 @@
             {{end}}
         </div>
     </header>
-    <div class="post-container">
-        <a href="/post">/post</a><br>
-        <a href="/like">/like</a><br>
-        <a href="/comment">/comment</a>
+  <form class="post-bar" action="/add_post" method="POST">
+    <input type="text" name="content" placeholder="What's on your mind?" required>
+    <button type="submit">Post</button>
+</form>
+
+  <div class="container">
+    {{ if not .IsLoggedIn }}
+    <div class="login-prompt">
+      <p>Please <a href="/login">login</a> to like or comment.</p>
+  </div>
+    {{ end }}
+
+    <div class="posts-container">
+    {{ range .Posts }}
+  <div class="card">
+        <h2>Post Title</h2>
+        <p>{{ .Content }}</p>
+      <form class="post-bar" action="/add_like" method="POST">
+          <input type="hidden" name="post_id" value="{{ .ID }}">
+          <input type="hidden" name="value" value="1">
+          <button class="btn btn-like" type="submit" formaction="">👍 Likes : {{ .Likes }}</button>
+      </form>
+      <form class="post-bar" action="/add_like" method="POST">
+          <input type="hidden" name="post_id" value="{{ .ID }}">
+          <input type="hidden" name="value" value="0">
+          <button class="btn btn-like" type="submit">👎 Dislike : {{ .Dislikes }}</button>
+      </form>
+        <h3>Comments</h3>
+        <div id="comments-{{ .ID }}">
+          {{ if .Comments }}
+            {{ range .Comments }}
+              <div class="comment">
+                <p>{{ .Text }}</p>
+              </div>
+            {{ end }}
+          {{ else }}
+            <p>No comments yet.</p>
+          {{ end }}
+        </div>
+      <form class="post-bar" action="/add_comment" method="POST">
+        <input type="hidden" name="post_id" value="{{ .ID }}">
+        <textarea name="content" placeholder="comemnt"></textarea>
+        <button type="submit" class="btn btn-comment">💬 Comment</button>
+        </form>
+      </div>
+      {{ end }}
     </div>
+      {{ if not .Posts  }} 
+        <p>No posts available</p>
+      {{ end }}
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      updateLikes();
+      updateDislikes();
+      loadComments();
+    });
+
+    function toggleLike(postID) {
+      fetch('/like', { method: 'POST' })
+        .then(response => response.text())
+        .then(data => {
+            console.log(data);
+            updateLikes();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function toggleDislike(postID) {
+      fetch('/dislike', { method: 'POST' })
+        .then(response => response.text())
+        .then(data => {
+            console.log(data);
+            updateDislikes();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function updateLikes() {
+      fetch('/likes/count')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('likesCount').innerText = 'Likes: ' + data.count;
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function updateDislikes() {
+      fetch('/dislikes/count')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('dislikesCount').innerText = 'Dislikes: ' + data.count;
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function addComment(postID) {
+      let content = document.getElementById('commentText').value;
+      fetch('/comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: postID, content: content })
+      })
+      .then(response => response.text())
+      .then(data => { 
+          console.log(data);
+          loadComments(); 
+          document.getElementById('commentText').value = ''; 
+      })
+      .catch(error => console.error('Error:', error));
+    }
+
+    function loadComments() {
+      fetch('/comments')
+        .then(response => response.json())
+        .then(data => {
+          let commentsDiv = document.getElementById('comments');
+          commentsDiv.innerHTML = '';
+          data.forEach(comment => {
+            let p = document.createElement('p');
+            p.innerText = comment.content;
+            commentsDiv.appendChild(p);
+          });
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    function toggleButton() {
+      const input = document.getElementById("postInput");
+      const button = document.getElementById("postButton");
+      button.disabled = input.value.trim() === "";
+    }
+  </script>
 </body>
 </html>
