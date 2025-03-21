@@ -119,3 +119,15 @@ func DislikesCountHandler(w http.ResponseWriter, r *http.Request) {
 	count := getDislikesCount(postID)
 	json.NewEncoder(w).Encode(map[string]int{"count": count})
 }
+
+func IsReacted(user_id int, post_id string) bool {
+	var count int
+	DB.QueryRow("SELECT COUNT(1) FROM likes_dislikes WHERE user_id = ? AND post_id = ?", user_id, post_id).Scan(&count)
+
+	return count > 0
+}
+
+func UpdateReaction() {
+	_, err = database.Db.Exec("UPDATE likes_dislikes SET is_like = ? WHERE user_id = ? AND post_id = ?", likeOrDislike, user_id, post_id)
+	
+}

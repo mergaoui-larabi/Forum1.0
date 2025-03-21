@@ -53,3 +53,9 @@ func CommentHandler(w http.ResponseWriter, r *http.Request) {
 func CommentsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(getComments())
 }
+
+func AddComment(user_id int, post_id string, comment string) error {
+	_, err := DB.Exec("INSERT INTO comments (user_id, post_id, comment) VALUES (?, ?, ?)", user_id, post_id, comment)
+	return err
+}
+
