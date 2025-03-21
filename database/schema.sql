@@ -39,3 +39,41 @@ CREATE TABLE IF NOT EXISTS oauth_providers (
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     UNIQUE (provider_name, provider_id)
 );
+
+
+-- Post table
+CREATE TABLE IF NOT EXISTS post (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- like/dislike table
+CREATE TABLE IF NOT EXISTS likes_dislikes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    post_id INTEGER,
+    is_like BOOLEAN NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    UNIQUE(user_id, post_id)
+);
+
+-- comments
+CREATE TABLE IF NOT EXISTS comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    post_id INTEGER,
+    comment TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+--categories
+CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL
+);
