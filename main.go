@@ -9,6 +9,8 @@ import (
 	"forum/handlers"
 	"net/http"
 
+	// "forum/models"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -32,13 +34,18 @@ func main() {
 	forumux.HandleFunc("/profile/update/{value}/save", handlers.AuthMidleware(handlers.SaveChanges))
 	forumux.HandleFunc("/profile/delete", handlers.AuthMidleware(handlers.ServeDelete))
 	forumux.HandleFunc("/profile/delete/confirm", handlers.AuthMidleware(handlers.DeleteConfirmation))
-
-	// forumux.HandleFunc("/like", handlers.AuthMidleware(handlers.LikeHandler)) // TODO : generate ur own routes
-	// forumux.HandleFunc("/post", handlers.AuthMidleware(handlers.PostHandler))
-	// forumux.HandleFunc("/comment", handlers.AuthMidleware(handlers.CommentHandler))
-
+	// fmt.Println("server is running")
 	forumux.HandleFunc("/", handlers.RootHandler)
 	forumux.HandleFunc("/static/", handlers.StaticHnadler)
+	forumux.HandleFunc("/like", database.ToggleLikeHandler)
+	forumux.HandleFunc("/dislike", database.ToggleDislikeHandler)
+	forumux.HandleFunc("/comment", database.CommentHandler)
+	forumux.HandleFunc("/likes/count", database.LikesCountHandler)
+	forumux.HandleFunc("/dislikes/count", database.DislikesCountHandler)
+	forumux.HandleFunc("/comments", database.CommentsHandler)
+	forumux.HandleFunc("/add_post", handlers.AddPostHandler)
+	forumux.HandleFunc("/add_comment", handlers.AddCommentHandler)
+	forumux.HandleFunc("/add_like", handlers.AddLikesAndDislikes)
 
 	fmt.Println("Server running on ", SERVERURL)
 	err := http.ListenAndServe(PORT, forumux)

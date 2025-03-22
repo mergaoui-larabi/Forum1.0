@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	// "fmt"
 )
 
 func AddPost(db *sql.DB, userID int, content string) error {
@@ -16,6 +17,8 @@ func AddPost(db *sql.DB, userID int, content string) error {
 }
 
 func InsertPost(user_id int, content string) error {
+	// fmt.Println("")
 	_, err := DB.Exec("INSERT INTO post (user_id, content) VALUES (?, ?)", user_id, content)
+	// fmt.Println("error is :", err)
 	return err
 }

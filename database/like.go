@@ -50,7 +50,7 @@ func ToggleLikeHandler(w http.ResponseWriter, r *http.Request) {
 
 func getLikesCount(postID int) int {
 	var count int
-	err := DB.QueryRow("SELECT COUNT(*) FROM likes WHERE post_id = ?", postID).Scan(&count)
+	err := DB.QueryRow("SELECT COUNT(*) FROM likes_dislikes WHERE post_id = ?", postID).Scan(&count)
 	if err != nil {
 		log.Printf("Error fetching likes count: %v", err)
 		return 0
@@ -106,7 +106,7 @@ func ToggleDislikeHandler(w http.ResponseWriter, r *http.Request) {
 
 func getDislikesCount(postID int) int {
 	var count int
-	err := DB.QueryRow("SELECT COUNT(*) FROM likes WHERE post_id = ?", postID).Scan(&count)
+	err := DB.QueryRow("SELECT COUNT(*) FROM likes_dislikes WHERE post_id = ?", postID).Scan(&count)
 	if err != nil {
 		log.Printf("Error fetching likes count: %v", err)
 		return 0
