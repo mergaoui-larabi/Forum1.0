@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS oauth_providers (
     UNIQUE (provider_name, provider_id)
 );
 
-
 -- Post table
 CREATE TABLE IF NOT EXISTS post (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
