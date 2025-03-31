@@ -7,6 +7,9 @@ import (
 	"forum/config"
 	"forum/database"
 	"forum/handlers"
+	auth "forum/handlers/authentification"
+	post "forum/handlers/posts"
+	static "forum/handlers/static"
 	"net/http"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -23,22 +26,22 @@ func main() {
 	config.InitRegex()
 
 	forumux := http.NewServeMux()
-	forumux.HandleFunc("/login", handlers.SwitchLogin)
-	forumux.HandleFunc("/register", handlers.SwitchRegister)
-	forumux.HandleFunc("/logout", handlers.LogoutHandler)
+	forumux.HandleFunc("/login", auth.SwitchLogin)
+	forumux.HandleFunc("/register", auth.SwitchRegister)
+	forumux.HandleFunc("/logout", auth.LogoutHandler)
 
-	forumux.HandleFunc("/profile", handlers.AuthMidleware(handlers.ProfilHandler))
-	forumux.HandleFunc("/profile/update/{value}", handlers.AuthMidleware(handlers.UpddateProfile))
-	forumux.HandleFunc("/profile/update/{value}/save", handlers.AuthMidleware(handlers.SaveChanges))
-	forumux.HandleFunc("/profile/delete", handlers.AuthMidleware(handlers.ServeDelete))
-	forumux.HandleFunc("/profile/delete/confirm", handlers.AuthMidleware(handlers.DeleteConfirmation))
+	forumux.HandleFunc("/profile", auth.AuthMidleware(auth.ProfilHandler))
+	forumux.HandleFunc("/profile/update/{value}", auth.AuthMidleware(auth.UpddateProfile))
+	forumux.HandleFunc("/profile/update/{value}/save", auth.AuthMidleware(auth.SaveChanges))
+	forumux.HandleFunc("/profile/delete", auth.AuthMidleware(auth.ServeDelete))
+	forumux.HandleFunc("/profile/delete/confirm", auth.AuthMidleware(auth.DeleteConfirmation))
 
-	forumux.HandleFunc("/like", handlers.AuthMidleware(handlers.LikeHandler)) // TODO : generate ur own routes
-	forumux.HandleFunc("/post", handlers.AuthMidleware(handlers.PostHandler))
-	forumux.HandleFunc("/comment", handlers.AuthMidleware(handlers.CommentHandler))
+	forumux.HandleFunc("/like", auth.AuthMidleware(post.LikeHandler)) // TODO : generate ur own routes
+	forumux.HandleFunc("/post", auth.AuthMidleware(post.PostHandler))
+	forumux.HandleFunc("/comment", auth.AuthMidleware(post.CommentHandler))
 
 	forumux.HandleFunc("/", handlers.RootHandler)
-	forumux.HandleFunc("/static/", handlers.StaticHnadler)
+	forumux.HandleFunc("/static/", static.StaticHandler)
 
 	fmt.Println("Server running on ", SERVERURL)
 	err := http.ListenAndServe(PORT, forumux)

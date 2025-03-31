@@ -19,3 +19,10 @@ func ValidEmail(s string) bool {
 	}
 	return true
 }
+
+func ValidPassword(s string) bool {
+	if len(s) >= 8 && len(s) <= 50 {
+		return true
+	}
+	return false
+}

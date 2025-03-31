@@ -1,5 +1,4 @@
 authentifcation:
-    forget password
     oauth
     change password
     change email

@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func StaticHnadler(w http.ResponseWriter, r *http.Request) {
+func StaticHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Oops!?, Method Not Allowed try again", http.StatusMethodNotAllowed)
 	}
@@ -22,4 +22,3 @@ func StaticHnadler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.ServeFile(w, r, url)
 }
-
