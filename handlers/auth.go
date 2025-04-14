@@ -69,11 +69,8 @@ func SubmitRegister(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 	confirm_password := r.FormValue("confirm_password")
+	fmt.Println(confirm_password)
 
-	if !config.ValidUsername(username) || !config.ValidEmail(email) || len(password) < 8 || confirm_password != password { //TODO: it should be a better way
-		ServRegister(w, r)
-		return
-	}
 
 	hash, err := security.HashPassword(password)
 	if err != nil {
@@ -99,12 +96,10 @@ func SubmitLogin(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	if (!config.ValidUsername(username) && !config.ValidEmail(username)) || len(password) < 8 || !database.AlreadyExists(username, username) { //TODO: it should be a better way
-		ServLogin(w, r)
-		return
-	}
+	
 
 	user_id, hash := database.GetUserHash(username)
+	
 
 	if !security.CheckPassword(password, hash) {
 		http.Error(w, "wrong passwrod", http.StatusUnauthorized)
@@ -147,5 +142,5 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

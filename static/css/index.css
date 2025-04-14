@@ -1,32 +1,161 @@
+/* Reset default styles and ensure responsiveness */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
 body {
-    margin: 0;
-    padding: 0;
+    background: linear-gradient(135deg, #1a1a2e, #16213e); /* Dark gradient for a modern vibe */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
 }
 
+/* Navigation bar styling */
 .nav {
-    height: 10vh;
-    position: relative;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.25);
-}
-
-.profile {
-    position: absolute;
-    padding: 0;
-    margin: 0;
-    top: 10px;
-    right: 10px;
-    font-size: xx-large;
-    text-decoration: none;
-    color: black;
-}
-
-a{
-    font-size: xx-large;
-    text-decoration: none;
-    color: black;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Slightly darkened navbar */
+    padding: 10px 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .profile a {
-    border: black solid 2px;
-    padding: 5px;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1rem;
+    margin-left: 10px;
+}
+
+.profile a:hover {
+    text-decoration: underline;
+}
+
+/* Post container styling */
+main {
+    width: 100%;
+    max-width: 900px;
+    margin-top: 80px; /* Space below the fixed nav */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.post {
+    background: rgba(255, 255, 255, 0.1);
+    margin: 15px 0;
+    padding: 15px;
+    border-radius: 10px;
+    width: 100%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.post p {
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+button {
+    background: linear-gradient(90deg, #00ff9d, #00d4ff); /* Kick-inspired gradient */
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    color: #1a1a2e;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 10px;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 255, 163, 0.5);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Form container styling */
+.post-container {
+    width: 100%;
+    max-width: 600px;
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+form {
+    margin: 10px 0;
+    width: 100%;
+}
+
+form button {
+    background: linear-gradient(90deg, #00ff9d, #00d4ff);
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    color: #1a1a2e;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Placeholder styling */
+input::placeholder {
+    color: #b0b0b0;
+}
+
+input {
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+input:focus {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(0, 255, 163, 0.5); /* Vibrant green glow like Kick */
+}
+
+input, button {
+    font-size: 1rem;
+    padding: 12px;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    .post-container, .post {
+        width: 90%;
+    }
+
+    button, input {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+
+    .post p {
+        font-size: 0.9rem;
+    }
 }
